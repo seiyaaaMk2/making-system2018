@@ -126,7 +126,7 @@
                   meanings = currentItem["meanings"][0]["text"];
                 dictlist += "<p style='margin: -10px 10px 0px -20px'>再翻訳：" + meanings + "</p>";
                 }
-                
+
                 dictlist += "<hr style='margin-left:-50px'></a></li>";
               }
 
@@ -156,7 +156,6 @@
         });
 
         function makeElements(WordObjectX){
-            //$('#title').find("div").empty()
             $('#title').html(WordObjectX.word + " / " + WordObjectX.phrase);    //単語名など
 
             var BaseURL = "https://glosbe.com/gapi/tm?from=ja&dest=eng&format=json&phrase="; //和英のURL(英和の時は日本語で単語を見つけるため)
@@ -176,7 +175,6 @@
         }
 
         function callbackForElements(json) {
-
             for (var j = 0, k = 0; j < 5; j++, k++) {
                 //while((json.examples[k]).indexOf(wordSelecting.word) < 0){
                 //        k++;
@@ -188,7 +186,6 @@
         }
 
         function getPict(WordObjectX) {
-
             var cx = "002357994367664541907:1z9tnduchhg";
             var key = "AIzaSyBFHs5lYYfBIjPYwRTX_OCx4pyGZwqsHtY"
 
@@ -216,19 +213,23 @@
             $('#originalImage').html("<img src='" + ImageLink + "' style='width:100%' alt='RelatedOriginalImage' />");
         }
 
-        var index = 1;
-        var referer = new WordObject();   //ローカルストレージに読み込んだ単語を格納するオブジェクト
-
         $(function(){
             $("#add-btn").click(function(){
-//                $("#translated-text-detail").html(document.getElementsByClassName('elements'));
 
                 localStorage.setItem(index, JSON.stringify(wordSelecting));  //ローカルストレージへの読み込み
                 
-                referer = JSON.parse(localStorage.getItem(index));  //ローカルストレージからの格納
-                document.getElementById("counter").innerHTML = index;//counter個目まで登録中って出てくる
+            });
+        });
 
-                $($('<li>').html('<p class="listElement">' + referer.word + ' : ' + referer.phrase +　'<br /> - ' + referer.meanings + '</p>')).appendTo('#word-list');
+        var index = 1;
+
+        $(function(){
+            $("#add-btn").click(function(){
+                var temp = new WordObject();   //ローカルストレージに読み込んだ単語を格納するオブジェクト
+                temp = JSON.parse(localStorage.getItem(index));  //ローカルストレージからの格納
+                document.getElementById("counter").innerHTML = index;//「counter個目まで登録中」って出てくる
+
+                $($('<li>').html('<p class="listElement">' + temp.word + ' : ' + temp.phrase +　'<br /> - ' + temp.meanings + '</p>')).appendTo('#word-list');
                 $('#word-list').listview("refresh");
                 index++;
             });
