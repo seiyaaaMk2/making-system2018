@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: content: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <link rel="stylesheet" href="css/style.css">
+    <!--script>
+        // PhoneGap event handler
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+            console.log("PhoneGap is ready");
+        }
+    </script-->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
+
+    <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js"></script>
+    <script src="http://redopop.com/innershiv/innershiv.js"></script>
+
+       <style>
+        .top-header {
+            display: flex;
+            padding: 60px 20px;
+            position: fixed;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .page {
+        }
+
+        .parent {
+            width: 100%;
+            display: flex;
+        }
+
+        .dict-elements {    /*  辞書の項目   */
+            text-decoration: none;
+            color: #3f3f3f;
+        }
+
+        .sentences {    /*  例文の項目   */
+            margin: 0px 10px;   /*左右にのみ10pxのマージン*/
+            font-size: 10.5pt;
+        }
+
+        p.listElement {    /*  単語帳の項目   */
+            text-decoration: none;
+            color: #3f3f3f;
+            font-size: 10.5pt;
+            margin: 2px;
+            padding: 2px;
+        }
+
+
+
+        .imageArea{
+            margin-left: auto;
+            background-color: #e4d3a2;
+            display:inline-block;
+        }
+
+    </style>
+
+    <script>
+
+        var WordObject = function(word, phrase, meanings){  //現在見ている単語を格納するオブジェクト{
+            this.word = word;                               //  ユーザが検索した語句
+            this.phrase = phrase;                           //  検索した中でユーザが選択した意味を持つ語句
+            this.meanings = meanings;                       //  訳・もしくは再翻訳 }
+        }
+
+        var wordSelecting = new WordObject();
+
+        function getDict() {
+            var BaseURL = "https://glosbe.com/gapi/translate?from=eng&dest=ja&format=json&phrase="; //英和
+
+            if($('#mode [name=lang]:checked').val()=="ja"){
+                BaseURL = "https://glosbe.com/gapi/translate?from=ja&dest=eng&format=json&phrase="; //和英
+            }
+            var URLSuffixes = "&pretty=true";
+            var URL = BaseURL + document.search.word.value + URLSuffixes;
+            //console.log("Constructed URL : " + URL);
+
+            wordSelecting.word = document.search.word.value;    //検索中のキーワードを保存
+
+            $.ajax({
+                url: URL,
+                dataType: "jsonp",
+                jsonp: "callback",
+                jsonpCallback: "callbackForDict",   //callback関数名を自分で指名
+            });
+
+            /*var url = "https://cse.google.com/cse?cx=002357994367664541907:1z9tnduchhg&key=AIzaSyBFHs5lYYfBIjPYwRTX_OCx4pyGZwqsHtY&searchType=image&q=" + document.search.word.value;
+            $("#link_text a").attr("href", url);    //html上のカスタムサーチ検索のURLを動的に変更（とりあえずの処理）
+            */
+        }
+
+        function callbackForDict(json) {
+            var max = Object.keys(json.tuc).length;
+            //if(max<0)max=0;
+            if(max>10)max=10;
+
+            var dictlist = "<ol data-role='listview'>";
+            for (var i = 0; i < max; i++) {
+            var target = json.tuc[i];
+
+              //if(Object.keys(json.tuc[i]).length>3){
+
+
+              var currentItem = json.tuc[i];
+
+              var phrase = "";
+              if(currentItem["phrase"]["text"])
+                phrase = currentItem["phrase"]["text"];
+              var meanings = "";
+              if (currentItem["meanings"][0]["text"])
+                meanings = currentItem["meanings"][0]["text"];
+              
+                dictlist += "<li style='margin: -10px -20px;''><a class='dict-elements' id='"+ Number(i+1) +"' data-role='button' href='#wordpage' data-transition='slide' data-phrase='" + phrase + "'' data-meanings='" + meanings + "'><h3>"+ phrase + "</h3>";
+              }
+
+
+                dictlist += "<p style='margin: -10px 10px 0px -20px'>再翻訳：" + meanings + "</p>";
+              dictlist += "<hr style='margin-left:-50px'></a></li>";
+            }
+            dictlist += "</ol>";
+            
+            $("#message").text("関連度の高い語句上位" + Number(i+1) + "件を表示します：");
+            $("#translated-text").html(dictlist);
+        }
+
+        $(function(){
+            $('#search-button').click(function(){       //検索時の動作
+                getDict();
+            });
+        });
+
+        $('.dict-elements').live('click', function(){   //辞書の項目をクリックした際の動作
+
+            var ID = $(this).attr('id');
+            var x = document.getElementById(ID);
+            wordSelecting.phrase = x.getAttribute("data-phrase");
+            wordSelecting.meanings = x.getAttribute("data-meanings");
+
+            $('#sentences').find("li").empty();
+            makeElements(wordSelecting);    //例文取得
+
+            getPict(wordSelecting);         //画像取得
+        });
+
+        function makeElements(WordObjectX){
+            //$('#title').find("div").empty()
+            $('#title').html(WordObjectX.word + " / " + WordObjectX.phrase);    //単語名など
+
+            var BaseURL = "https://glosbe.com/gapi/tm?from=ja&dest=eng&format=json&phrase="; //和英のURL(英和の時は日本語で単語を見つけるため)
+
+            if($('#mode [name=lang]:checked').val()=="ja"){
+                BaseURL = "https://glosbe.com/gapi/tm?from=eng&dest=ja&format=json&phrase="; //英和
+            }
+            var URLSuffixes = "&page=1&pretty=true";
+            var URL = BaseURL + WordObjectX.phrase + URLSuffixes;
+
+            $.ajax({
+                url: URL,
+                dataType: "jsonp",
+                jsonp: "callback",
+                jsonpCallback: "callbackForElements"
+            });
+        }
+
+        function callbackForElements(json) {
+
+            for (var j = 0, k = 0; j < 5; j++, k++) {
+                //while((json.examples[k]).indexOf(wordSelecting.word) < 0){
+                //        k++;
+                //}
+                alert(wordSelecting.word);
+                var translatedlist = "<p class='sentences'>"+ Number(j+1) +"）" + json.examples[j].first + "</p><p class='sentences'>  " + json.examples[j].second + "</p><hr/>";
+                $($('<li>').html(translatedlist)).appendTo('#sentences');
+            }
+        }
+
+        function getPict(WordObjectX) {
+
+            var cx = "002357994367664541907:1z9tnduchhg";
+            var key = "AIzaSyBFHs5lYYfBIjPYwRTX_OCx4pyGZwqsHtY"
+
+            //var BaseURL = "https://cse.google.com/cse?cx=" + cx + "&key=" + key + "&searchType=image&q="; //カスタムサーチ用
+            var BaseURL = "https://www.googleapis.com/customsearch/v1?key=" + key + "&cx=" + cx + "&searchType=image&q=";
+
+            var URL = BaseURL + WordObjectX.phrase;
+            console.log("Constructed URL : " + URL);
+
+            $.ajax({
+                url: URL,
+                dataType: "jsonp",
+                jsonp: "callback",
+                jsonpCallback: "callbackForPict",   //callback関数名を自分で指名
+            });
+
+        }
+
+        function callbackForPict(json) {
+            var ImageLink = json.items[0].link;                 //元画像のリンク
+            var ThumbLink = json.items[0].image.thumbnailLink;  //サムネイル画像リンク
+
+            alert(ImageLink);
+            $('#searchedImage').html("<a href='#popup' data-rel='popup' data-transition='pop' data-position-to='window'><img src='" + ThumbLink + "' alt='RelatedImage' /></a>");
+            $('#originalImage').html("<img src='" + ImageLink + "' style='width:100%' alt='RelatedOriginalImage' />");
+        }
+
+        var index = 1;
+        var referer = new WordObject();   //ローカルストレージに読み込んだ単語を格納するオブジェクト
+
+        $(function(){
+            $("#add-btn").click(function(){
+//                $("#translated-text-detail").html(document.getElementsByClassName('elements'));
+
+                localStorage.setItem(index, JSON.stringify(wordSelecting));  //ローカルストレージへの読み込み
+                
+                referer = JSON.parse(localStorage.getItem(index));  //ローカルストレージからの格納
+                document.getElementById("counter").innerHTML = index;//counter個目まで登録中って出てくる
+
+                $($('<li>').html('<p class="listElement">' + referer.word + ' : ' + referer.phrase +　'<br /> - ' + referer.meanings + '</p>')).appendTo('#word-list');
+                $('#word-list').listview("refresh");
+                j++;
+            });
+        });
+
+    </script>
+
+    <title>System2018</title>
+
+</head>
+<body>
+<!--                1.辞書の検索画面            -->
+    <div data-role="page" id="dict">
+        <div data-id="common_header" data-role="header" data-position="fixed" data-tap-toggle="false">
+            <h1>語彙学習用教材作成システム</h1>
+        </div>  <!--  以上ヘッダー  -->
+
+        <div data-role="content">
+
+            <fieldset data-type="horizontal" data-role="controlgroup">
+                <form id="mode">
+                    <input type="radio" name="lang" id="en" value="en" checked />
+                    <label for="en">英和</label>
+                    <input type="radio" name="lang" id="ja" value="ja" />
+                    <label for="ja">和英</label>
+                </form>
+            </fieldset>
+
+            <form name="search" style="display:inline-flex">
+                <input type="text" name="word" size="25" placeholder="検索したい単語を入力">
+                <input id="search-button" type="button" data-role="button" data-icon="search" value="検索" class="ui-btn-active ui-btn-inline"/>
+            </form>
+
+            <div id="message">調べたい語句をGlosbe辞書で検索します。</div>
+            <div role="main" class="ui-content" id="translated-text" style="height:300px; width:310px; overflow:auto; background-color: #cfcfcf;"></div>
+        </div>
+
+        <div data-id="common_footer" data-role="footer" data-position="fixed" data-tap-toggle="false">  <!--  以降フッター  -->
+            <div data-role="navbar">
+                <ul>
+                    <li><a data-role="button" href="#dict" data-icon="search" class="ui-btn-active" data-transition="slide" data-direction="reverse">辞書</a></li>
+                    <li><a data-role="button" href="#list" data-icon="star" data-transition="slide">単語帳</a></li>
+                    <!--<li><a href="c.html" data-icon="info"></a></li>-->
+                </ul>
+            </div>
+            <h6>＠システム製作実験金子班テーマ2</h6>
+        </div>
+    </div>
+<!--                1.辞書の検索画面            -->
+
+<!--                2.単語帳の画面            -->
+    <div data-role="page" id="list">
+        <div data-id="common_header" data-role="header" data-position="fixed">
+            <h1>語彙学習用教材作成システム</h1>
+        </div>  <!--  以上ヘッダー  -->
+
+        <div data-role="content">
+            <div>
+                <h4>辞書から追加された単語を表示します。</h4>
+                <p class="text">・現在<span id="counter">0</span>個目の単語まで登録されています。</p>
+            </div>
+            <div>
+
+                <ul id="word-list" data-role="listview" data-inset="true">
+                <!--ul id="list" data-role="listview"　data-filter="true" data-filter-placeholder="単語-->
+                        <!--    <li>ここに単語が追加されていく</li>   -->
+                </ul>
+            </div>
+        </div>
+
+        <div data-id="common_footer" data-role="footer" data-position="fixed">  <!--  以降フッター  -->
+            <div data-role="navbar">
+                <ul>
+                    <li><a data-role="button" href="#dict" data-icon="search" data-transition="slide" data-direction="reverse">辞書</a></li>
+                    <li><a data-role="button" href="#list" data-icon="star" class="ui-btn-active" data-transition="slide">単語帳</a></li>
+                </ul>
+            </div>
+            <h6>＠システム製作実験金子班テーマ2</h6>
+        </div>
+    </div>
+<!--                2.単語帳の画面            -->
+
+<!--                3.単語情報の画面            -->
+    <div data-role="page" id="wordpage">
+
+        <!--div id="popup" data-role="popup" data-overlay-theme="b" data-dismissible="false">
+            <a href="#" data-rel="back" data-role="button" data-icon="delete" class="ui-corner-all ui-btn-right ui-btn-icon-notext"></a>
+            <div id="originalImage"></div>
+        </div-->
+
+        <div data-id="common_header" data-role="header" data-position="fixed">
+            <a href="#dict" data-direction="reverse"> 戻る </a>
+            <h1>語彙学習用教材作成システム</h1>
+        </div>  <!--  以上ヘッダー  -->
+
+        <div data-role="content">
+                <div class="parent">
+                    <div id="title" style="font-size: 16pt">
+                    </div>
+                    <div role="main" class="ui-content" id="searchedImage">
+
+                    </div>
+                </div>
+                <hr />
+                <!--div id="link_text" class="imageArea">
+                    <a href="#" rel="external" style="text-decoration: none; color: #3f3f3f;">カスタムサーチ画像</a>
+                </div-->
+                    <!--span　id="sentences">例文を表示</span-->
+                <p>この単語を用いた例文：</p>
+                <div role="main" class="ui-content" style="height:200px; width:310px; overflow:auto; background-color: #cfcfcf;">
+                    <ul id="sentences" data-role="listview">
+                    </ul>
+                </div>
+
+                
+                <a id="add-btn" data-role="button" href="#" data-icon="action">単語帳に追加する</a>
+        </div>
+
+        <div data-id="common_footer" data-role="footer" data-position="fixed" data-tap-toggle="false">  <!--  以降フッター  -->
+            <div data-role="navbar">
+                <ul>
+                    <li><a data-role="button" href="#dict" data-icon="search" class="ui-btn-active" data-transition="slide" data-direction="reverse">辞書</a></li>
+                    <li><a data-role="button" href="#list" data-icon="star" data-transition="slide">単語帳</a></li>
+                </ul>
+            </div>
+            <h6>＠システム製作実験金子班テーマ2</h6>
+        </div>
+    </div>
+<!--                3.単語情報の画面            -->
+
+</body>
+</html>
