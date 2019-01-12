@@ -120,16 +120,16 @@
               if(currentItem["phrase"]["text"])
                 phrase = currentItem["phrase"]["text"];
               var meanings = "";
-              if (currentItem["meanings"][0]["text"])
+              if (currentItem["meanings"])
                 meanings = currentItem["meanings"][0]["text"];
               
                 dictlist += "<li style='margin: -10px -20px;''><a class='dict-elements' id='"+ Number(i+1) +"' data-role='button' href='#wordpage' data-transition='slide' data-phrase='" + phrase + "'' data-meanings='" + meanings + "'><h3>"+ phrase + "</h3>";
               }
 
 
-                dictlist += "<p style='margin: -10px 10px 0px -20px'>再翻訳：" + meanings + "</p>";
-              dictlist += "<hr style='margin-left:-50px'></a></li>";
-            }
+            dictlist += "<p style='margin: -10px 10px 0px -20px'>再翻訳：" + meanings + "</p>";
+            dictlist += "<hr style='margin-left:-50px'></a></li>";
+
             dictlist += "</ol>";
             
             $("#message").text("関連度の高い語句上位" + Number(i+1) + "件を表示します：");
