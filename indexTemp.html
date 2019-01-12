@@ -109,26 +109,26 @@
 
             var dictlist = "<ol data-role='listview'>";
             for (var i = 0; i < max; i++) {
-            var target = json.tuc[i];
+                var target = json.tuc[i];
 
-              //if(Object.keys(json.tuc[i]).length>3){
+                  //if(Object.keys(json.tuc[i]).length>3){
 
+                var currentItem = json.tuc[i];
 
-              var currentItem = json.tuc[i];
+                var phrase = "";
+                if(currentItem["phrase"]["text"]){
+                  phrase = currentItem["phrase"]["text"];
+                  dictlist += "<li style='margin: -10px -20px;''><a class='dict-elements' id='"+ Number(i+1) +"' data-role='button' href='#wordpage' data-transition='slide' data-phrase='" + phrase + "'' data-meanings='" + meanings + "'><h3>"+ phrase + "</h3>";
+                }
 
-              var phrase = "";
-              if(currentItem["phrase"]["text"])
-                phrase = currentItem["phrase"]["text"];
-              var meanings = "";
-              if (currentItem["meanings"])
-                meanings = currentItem["meanings"][0]["text"];
-              
-                dictlist += "<li style='margin: -10px -20px;''><a class='dict-elements' id='"+ Number(i+1) +"' data-role='button' href='#wordpage' data-transition='slide' data-phrase='" + phrase + "'' data-meanings='" + meanings + "'><h3>"+ phrase + "</h3>";
+                var meanings = "";
+                if (currentItem["meanings"]){
+                  meanings = currentItem["meanings"][0]["text"];
+                dictlist += "<p style='margin: -10px 10px 0px -20px'>再翻訳：" + meanings + "</p>";
+                }
+                
+                dictlist += "<hr style='margin-left:-50px'></a></li>";
               }
-
-
-            dictlist += "<p style='margin: -10px 10px 0px -20px'>再翻訳：" + meanings + "</p>";
-            dictlist += "<hr style='margin-left:-50px'></a></li>";
 
             dictlist += "</ol>";
             
@@ -146,7 +146,7 @@
 
             var ID = $(this).attr('id');
             var x = document.getElementById(ID);
-            wordSelecting.phrase = x.getAttribute("data-phrase");
+            wordSelecting.phrase = x.getAttribute("data-phrase");       
             wordSelecting.meanings = x.getAttribute("data-meanings");
 
             $('#sentences').find("li").empty();
@@ -181,7 +181,7 @@
                 //while((json.examples[k]).indexOf(wordSelecting.word) < 0){
                 //        k++;
                 //}
-                alert(wordSelecting.word);
+                //alert(wordSelecting.word);
                 var translatedlist = "<p class='sentences'>"+ Number(j+1) +"）" + json.examples[j].first + "</p><p class='sentences'>  " + json.examples[j].second + "</p><hr/>";
                 $($('<li>').html(translatedlist)).appendTo('#sentences');
             }
@@ -230,7 +230,7 @@
 
                 $($('<li>').html('<p class="listElement">' + referer.word + ' : ' + referer.phrase +　'<br /> - ' + referer.meanings + '</p>')).appendTo('#word-list');
                 $('#word-list').listview("refresh");
-                j++;
+                index++;
             });
         });
 
