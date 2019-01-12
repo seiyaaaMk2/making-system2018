@@ -32,9 +32,6 @@
             width: 100%;
         }
 
-        .page {
-        }
-
         .parent {
             width: 100%;
             display: flex;
@@ -58,13 +55,6 @@
             padding: 2px;
         }
 
-
-        /*画像が表示される領域*/
-        .imageArea{
-            margin-left: auto;
-            background-color: #e4d3a2;
-            display:inline-block;
-        }
 
     </style>
 
@@ -208,10 +198,9 @@
             var ImageLink = json.items[0].link;                 //元画像のリンク
             var ThumbLink = json.items[0].image.thumbnailLink;  //サムネイル画像リンク
 
-            $('#searchedImage').html("<a href='#popup' data-rel='popup' data-transition='pop' data-position-to='window'><img src='" + ThumbLink + "' alt='RelatedImage' /></a>");
+            $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img src='" + ThumbLink + "' alt='RelatedImage' /></a>");
             $('#originalImage').html("<img src='" + ImageLink + "' style='width:100%' alt='RelatedOriginalImage' />");
         }
-
 
         var index = 1;
 
@@ -229,6 +218,8 @@
                 document.getElementById("counter").innerHTML = index;//「counter個目まで登録中」って出てくる
 
                 $($('<li>').html('<p class="listElement">' + temp.word + ' : ' + temp.phrase +　'<br /> - ' + temp.meanings + '</p>')).appendTo('#word-list');
+                //$($('<li>').html('<a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" data-rel="popup" data-position-to="window" data-transition="pop"></a>').appendTo('#word-list');
+                $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
                 $('#word-list').listview("refresh");
             });
 
@@ -281,6 +272,19 @@
 
 <!--                2.単語帳の画面            -->
     <div data-role="page" id="list">
+
+        <div id="list_menu" data-role="popup" data-theme="a" data-overlay-theme="c">
+            <ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="d">
+                <li data-role="divider" data-theme="e">Choose an action</li>
+                <li><a href="#">View details</a>
+                </li>
+                <li><a href="#">Delete</a>
+                </li>
+                <li data-theme="a"><a data-rel="back" href="#">Cancel</a>
+                </li>
+            </ul>
+        </div>
+
         <div data-id="common_header" data-role="header" data-position="fixed">
             <h1>語彙学習用教材作成システム</h1>
         </div>  <!--  以上ヘッダー  -->
@@ -314,10 +318,10 @@
 <!--                3.単語情報の画面            -->
     <div data-role="page" id="wordpage">
 
-        <!--div id="popup" data-role="popup" data-overlay-theme="b" data-dismissible="false">
+        <div id="picture_popup" data-role="popup" data-overlay-theme="b" data-dismissible="false">
             <a href="#" data-rel="back" data-role="button" data-icon="delete" class="ui-corner-all ui-btn-right ui-btn-icon-notext"></a>
             <div id="originalImage"></div>
-        </div-->
+        </div>
 
         <div data-id="common_header" data-role="header" data-position="fixed">
             <a href="#dict" data-direction="reverse"> 戻る </a>
@@ -333,10 +337,6 @@
                     </div>
                 </div>
                 <hr />
-                <!--div id="link_text" class="imageArea">
-                    <a href="#" rel="external" style="text-decoration: none; color: #3f3f3f;">カスタムサーチ画像</a>
-                </div-->
-                    <!--span　id="sentences">例文を表示</span-->
                 <p>この単語を用いた例文：</p>
                 <div role="main" class="ui-content" style="height:200px; width:310px; overflow:auto; background-color: #cfcfcf;">
                     <ul id="sentences" data-role="listview">
