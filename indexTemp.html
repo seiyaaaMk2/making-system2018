@@ -202,27 +202,32 @@
             $('#originalImage').html("<img src='" + ImageLink + "' style='width:100%' alt='RelatedOriginalImage' />");
         }
 
-        var index = 1;
-
         $(function(){
             $("#add-btn").click(function(){
-                localStorage.setItem(index, JSON.stringify(wordSelecting));  //ローカルストレージへの読み込み
-                index++;
+                var time = $.now(); //登録した時間がキーとなる
+                localStorage.setItem(time, JSON.stringify(wordSelecting));  //ローカルストレージへの読み込み
+                ;
             });
 
-            $("#list").click(function(){
+            $("#list_button").click(function(){
                 $('#word-list').find("li").empty();
+                for (var i = 0; i < localStorage.length; i++) {
 
-                var temp = new WordObject();   //ローカルストレージに読み込んだ単語を格納するオブジェクト
-                temp = JSON.parse(localStorage.getItem(index));  //ローカルストレージからの格納
-                document.getElementById("counter").innerHTML = index;//「counter個目まで登録中」って出てくる
+                    var temp = new WordObject();   //ローカルストレージに読み込んだ単語を格納するオブジェクト
 
-                $($('<li>').html('<p class="listElement">' + temp.word + ' : ' + temp.phrase +　'<br /> - ' + temp.meanings + '</p>')).appendTo('#word-list');
-                //$($('<li>').html('<a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" data-rel="popup" data-position-to="window" data-transition="pop"></a>').appendTo('#word-list');
-                $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
-                $('#word-list').listview("refresh");
+                    //画像をアップロードしているとi番目のkeyが狂うことを考慮する必要あり
+
+                    temp = JSON.parse(localStorage.getItem(localStorage.key(i)));  //ローカルストレージからの格納
+                    $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" id="' + Number(i+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
+                    $('#word-list').listview("refresh");
+                }
+                document.getElementById("counter").innerHTML = localStorage.length;//「counter個目まで登録中」って出てくる
             });
+        });
 
+        $('#delete-btn').live('click', function(){   //deleteボタンをクリックした際の動作
+            var ID = $(this).attr('id');
+            localStorage.removeItem(localStorage.key(ID));
         });
 
     </script>
@@ -261,7 +266,7 @@
             <div data-role="navbar">
                 <ul>
                     <li><a data-role="button" href="#dict" data-icon="search" class="ui-btn-active" data-transition="none" data-direction="reverse">辞書</a></li>
-                    <li><a data-role="button" href="#list" data-icon="star" data-transition="none">単語帳</a></li>
+                    <li><a id="list_button" data-role="button" href="#list" data-icon="star" data-transition="none">単語帳</a></li>
                     <!--<li><a href="c.html" data-icon="info"></a></li>-->
                 </ul>
             </div>
@@ -278,7 +283,7 @@
                 <li data-role="divider" data-theme="e">Choose an action</li>
                 <li><a href="#">View details</a>
                 </li>
-                <li><a href="#">Delete</a>
+                <li><a href="#" id="delete-btn">Delete</a>
                 </li>
                 <li data-theme="a"><a data-rel="back" href="#">Cancel</a>
                 </li>
@@ -307,7 +312,7 @@
             <div data-role="navbar">
                 <ul>
                     <li><a data-role="button" href="#dict" data-icon="search" data-transition="none" data-direction="reverse">辞書</a></li>
-                    <li><a data-role="button" href="#list" data-icon="star" class="ui-btn-active" data-transition="none">単語帳</a></li>
+                    <li><a id="list_button" data-role="button" href="#list" data-icon="star" class="ui-btn-active" data-transition="none">単語帳</a></li>
                 </ul>
             </div>
             <h6>＠システム製作実験金子班テーマ2</h6>
@@ -351,7 +356,7 @@
             <div data-role="navbar">
                 <ul>
                     <li><a data-role="button" href="#dict" data-icon="search" class="ui-btn-active" data-transition="none" data-direction="reverse">辞書</a></li>
-                    <li><a data-role="button" href="#list" data-icon="star" data-transition="none">単語帳</a></li>
+                    <li><a id="list_button" data-role="button" href="#list" data-icon="star" data-transition="none">単語帳</a></li>
                 </ul>
             </div>
             <h6>＠システム製作実験金子班テーマ2</h6>
