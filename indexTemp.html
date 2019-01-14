@@ -99,9 +99,6 @@
 
             var dictlist = "<ol data-role='listview'>";
             for (var i = 0; i < max; i++) {
-                var target = json.tuc[i];
-
-                  //if(Object.keys(json.tuc[i]).length>3){
 
                 var currentItem = json.tuc[i];
 
@@ -117,12 +114,14 @@
                 dictlist += "<p style='margin: -10px 10px 0px -20px'>再翻訳：" + meanings + "</p>";
                 }
 
-                dictlist += "<hr style='margin-left:-50px'></a></li>";
+                if(currentItem["phrase"]["text"]||currentItem["meanings"]){
+                    dictlist += "<hr style='margin-left:-50px'></a></li>";
+                }
               }
 
             dictlist += "</ol>";
             
-            $("#message").text("関連度の高い語句上位" + Number(i+1) + "件を表示します：");
+            $("#message").text("関連度の高い語句上位" + i + "件を表示します：");
             $("#translated-text").html(dictlist);
         }
 
@@ -165,13 +164,15 @@
         }
 
         function callbackForElements(json) {
-            for (var j = 0, k = 0; j < 5; j++, k++) {
-                //while((json.examples[k]).indexOf(wordSelecting.word) < 0){
-                //        k++;
-                //}
-                //alert(wordSelecting.word);
-                var translatedlist = "<p class='sentences'>"+ Number(j+1) +"）" + json.examples[j].first + "</p><p class='sentences'>  " + json.examples[j].second + "</p><hr/>";
-                $($('<li>').html(translatedlist)).appendTo('#sentences');
+            for (var i = 0,; i < 5; i++) {
+
+                var currentItem = json.examples[i];
+
+                if(currentItem["first"]&&currentItem["second"]){
+                    var translatedlist = "<p class='sentences'>"+ Number(j+1) +"）" + currentItem.first + "</p><p class='sentences'>  " + currentItem.second + "</p><hr/>";
+                    $($('<li>').html(translatedlist)).appendTo('#sentences');
+                }
+
             }
         }
 
@@ -202,14 +203,7 @@
             $('#originalImage').html("<img src='" + ImageLink + "' style='width:100%' alt='RelatedOriginalImage' />");
         }
 
-        $(function(){
-            $("#add-btn").click(function(){
-                var time = $.now(); //登録した時間がキーとなる
-                localStorage.setItem(time, JSON.stringify(wordSelecting));  //ローカルストレージへの読み込み
-                ;
-            });
-
-            $("#list_button").click(function(){
+        function refreshWordList(json) {            //リストの描画・再描画
                 $('#word-list').find("li").empty();
                 for (var i = 0; i < localStorage.length; i++) {
 
@@ -221,14 +215,44 @@
                     $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" id="' + Number(i+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
                     $('#word-list').listview("refresh");
                 }
-                document.getElementById("counter").innerHTML = localStorage.length;//「counter個目まで登録中」って出てくる
+                document.getElementById("counter").innerHTML = localStorage.length;//「counter個登録中」って出てくる
+
+        }
+
+        $(function(){
+            $("#add-btn").click(function(){
+                var time = $.now(); //登録した時間が単語オブジェクトのキーとなる
+                localStorage.setItem(time, JSON.stringify(wordSelecting));  //ローカルストレージへの読み込み
+                refreshWordList();
+                alert(localStorage.getItem(localStorage.key(localStorage.length)).word + "/" + localStorage.getItem(localStorage.key(localStorage.length)).phrase + "が登録されました");
+            });
+
+            $("#list_button").click(function(){         //単語帳ページに遷移したときの動作
+                refreshWordList();
+            });
+
+            $('#detail-btn').live('click', function(){   //ポップアップの詳細をクリックした際の動作
+                var ID = $(this).attr('id');
+                $('#sentences').find("li").empty();
+                temp = JSON.parse(localStorage.getItem(localStorage.key(ID)));  //ローカルストレージからの格納
+                makeElements(temp);     //例文取得
+                getPict(temp);          //画像取得
+            });
+
+            $('#delete-btn').live('click', function(){   //ポップアップの削除をクリックした際の動作
+                var ID = $(this).attr('id');
+                localStorage.removeItem(localStorage.key(ID));
+                refreshWordList();
+                location.reload();
+            });
+
+            $('#delete-all-btn').live('click', function(){   //全削除ボタンをクリックした際の動作
+                localStorage.clear();
+                refreshWordList();
             });
         });
 
-        $('#delete-btn').live('click', function(){   //deleteボタンをクリックした際の動作
-            var ID = $(this).attr('id');
-            localStorage.removeItem(localStorage.key(ID));
-        });
+
 
     </script>
 
@@ -259,7 +283,7 @@
             </form>
 
             <div id="message">調べたい語句をGlosbe辞書で検索します。</div>
-            <div role="main" class="ui-content" id="translated-text" style="height:300px; width:310px; overflow:auto; background-color: #cfcfcf;"></div>
+            <div role="main" class="ui-content" id="translated-text" style="height:280px; width:310px; overflow:auto; background-color: #cfcfcf;"></div>
         </div>
 
         <div data-id="common_footer" data-role="footer" data-position="fixed" data-tap-toggle="false">  <!--  以降フッター  -->
@@ -280,12 +304,12 @@
 
         <div id="list_menu" data-role="popup" data-theme="a" data-overlay-theme="c">
             <ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="d">
-                <li data-role="divider" data-theme="e">Choose an action</li>
-                <li><a href="#">View details</a>
+                <li data-role="divider" data-theme="b">単語に対するアクションを選択：</li>
+                <li><a id="detail-btn" data-rel="back" href="#wordpage">単語のページを見る</a>
                 </li>
-                <li><a href="#" id="delete-btn">Delete</a>
+                <li><a id="delete-btn" data-rel="back" href="#">削除</a>
                 </li>
-                <li data-theme="a"><a data-rel="back" href="#">Cancel</a>
+                <li data-theme="a"><a data-rel="back" href="#">キャンセル</a>
                 </li>
             </ul>
         </div>
@@ -295,9 +319,14 @@
         </div>  <!--  以上ヘッダー  -->
 
         <div data-role="content">
+            
+            <div class="parent">
+                <p>追加された単語を表示します。</p>
+                <a href="#dialog" data-role="button" data-rel="dialog" data-overlay-theme="e">全削除</a>
+            </div>
+
             <div>
-                <h4>辞書から追加された単語を表示します。</h4>
-                <p class="text">・現在<span id="counter">0</span>個目の単語まで登録されています。</p>
+                <p class="text">・現在<span id="counter">0</span>個の単語が登録されています。</p>
             </div>
             <div>
 
@@ -334,22 +363,22 @@
         </div>  <!--  以上ヘッダー  -->
 
         <div data-role="content">
-                <div class="parent">
-                    <div id="title" style="font-size: 16pt">
-                    </div>
-                    <div role="main" class="ui-content" id="searchedImage">
-
-                    </div>
-                </div>
-                <hr />
-                <p>この単語を用いた例文：</p>
-                <div role="main" class="ui-content" style="height:200px; width:310px; overflow:auto; background-color: #cfcfcf;">
-                    <ul id="sentences" data-role="listview">
-                    </ul>
-                </div>
-
+            <div class="parent">
+                <div id="title" style="font-size: 16pt">    <!--  単語名表示  -->
                 
-                <a id="add-btn" data-role="button" href="#" data-icon="action">単語帳に追加する</a>
+                </div>
+                <div role="main" class="ui-content" id="searchedImage">
+
+                </div>
+            </div>
+            <p><hr />この単語を用いた例文：</p>
+            <div role="main" class="ui-content" style="height:200px; width:310px; overflow:auto; background-color: #cfcfcf;">
+                <ul id="sentences" data-role="listview">
+                </ul>
+            </div>
+
+            
+            <a id="add-btn" data-role="button" href="#list" data-icon="action">単語帳に追加する</a>
         </div>
 
         <div data-id="common_footer" data-role="footer" data-position="fixed" data-tap-toggle="false">  <!--  以降フッター  -->
@@ -363,8 +392,30 @@
         </div>
     </div>
 <!--                3.単語情報の画面            -->
+    
+        <!--div id="delete_popup" data-role="popup" data-theme="a" data-overlay-theme="c">
+            <ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="d">
+                <li data-role="divider" data-theme="b">本当に削除しますか？
+                </li>
+                <li><a id="delete-btn" data-rel="back" href="#">全削除をする</a>
+                </li>
+                <li data-theme="a"><a data-rel="back" href="#">キャンセル</a>
+                </li>
+            </ul>
+        </div-->
 
-<!--Conflict test2-->
+    <div data-role="page" id="dialog">
+        <div data-role="header" data-theme="b">
+           <h1>注意</h1>
+        </div>
+        <div data-role="content">
+            <p>単語帳の全要素を削除します。本当に削除しますか？</p>
+            <div class="parent">
+                <a id="delete-all-btn" href="#" data-role="button" data-theme="b" data-rel="back">確認</a>
+                <a href="#" data-role="button" data-rel="back">キャンセル</a>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
