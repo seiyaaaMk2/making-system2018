@@ -24,12 +24,9 @@
     <script src="http://redopop.com/innershiv/innershiv.js"></script>
 
        <style>
-        .top-header {
-            display: flex;
-            padding: 60px 20px;
-            position: fixed;
-            justify-content: space-between;
-            width: 100%;
+        .ui-header .ui-title {  /*ヘッダーが見切れてるのを改善*/
+            margin-left: 15%;
+            margin-right: 15%
         }
 
         .parent {
@@ -215,7 +212,7 @@
                     $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" id="' + Number(i+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
                     $('#word-list').listview("refresh");
                 }
-                document.getElementById("counter").innerHTML = localStorage.length;//「counter個登録中」って出てくる
+                document.getElementById("counter").innerHTML = i;//「counter個登録中」って出てくる
 
         }
 
@@ -246,19 +243,21 @@
                 location.reload();
             });
 
-            $('#delete-all-btn').live('click', function(){   //全削除ボタンをクリックした際の動作
+            $("#delete-all-btn").click(function(){         //全削除ボタンをクリックした際の動作
                 localStorage.clear();
                 refreshWordList();
             });
+
+            $("#cancel-btn").click(function(){         //キャンセルボタンをクリックした際の動作
+                reader.abort();
+            });
+
         });
 
         var reader = FileReader;
         var fileDisplayArea;
 //        var progress;
 
-        function abortRead() {
-            reader.abort();
-        }
 
         function errorHandler(evt) {
             switch(evt.target.error.code) {
@@ -307,6 +306,7 @@
 //                progress.style.width = '100%';
 //                progress.textContent = '100%';
                 setTimeout("document.getElementById('progress_bar').className='';", 2000);
+
                 //Set file
 
                 window.localStorage.setItem("file",reader.result);
@@ -322,13 +322,16 @@
 
         $(function(){
             fileDisplayArea = document.getElementById('searchedImage');
-            fileDisplayArea.removeChild();
+            ('#searchedImage').empty();
+            //fileDisplayArea.empty();
 //            progress = document.querySelector('.percent');
             document.getElementById('files').addEventListener('change', handleFileSelect, false);
             var revisedFile = window.localStorage.getItem("file");
             var img = new Image();
             img.src = revisedFile;
-            fileDisplayArea.appendChild(img);
+//            fileDisplayArea.appendChild(img);
+            fileDisplayArea.append('<img src="' + img.src + '" style="max-height: 100%; max-width: 100%;">');
+
         });
 
 
@@ -383,13 +386,26 @@
         <div id="list_menu" data-role="popup" data-theme="a" data-overlay-theme="c">
             <ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="d">
                 <li data-role="divider" data-theme="b">単語に対するアクションを選択：</li>
-                <li><a id="detail-btn" data-rel="back" href="#wordpage">単語のページを見る</a>
+                <li><a id="detail-btn" href="#wordpage">単語のページを見る</a>
                 </li>
                 <li><a id="delete-btn" data-rel="back" href="#">削除</a>
                 </li>
                 <li data-theme="a"><a data-rel="back" href="#">キャンセル</a>
                 </li>
             </ul>
+        </div>
+
+        <div id="dialog" data-role="popup" data-overlay-theme="c">
+            <div data-role="header">
+               <h1>注意</h1>
+            </div>
+            <div data-role="content">
+                <p>単語帳の全要素を削除します。本当に削除しますか？</p>
+                <div class="parent">
+                    <a id="delete-all-btn" href="#" data-role="button" data-theme="b" data-rel="back">確認</a>
+                    <a href="#" data-role="button" data-rel="back">キャンセル</a>
+                </div>
+            </div>
         </div>
 
         <div data-id="common_header" data-role="header" data-position="fixed">
@@ -400,7 +416,8 @@
             
             <div class="parent">
                 <p>追加された単語を表示します。</p>
-                <a href="#dialog" data-role="button" data-rel="dialog" data-overlay-theme="e">全削除</a>
+                <a href="#dialog" id="a" data-rel="popup" data-role="button" data-position-to="window" data-transition="pop" data-inline="true">全削除</a>
+
             </div>
 
             <div>
@@ -409,14 +426,14 @@
             <div>
 
                 <ul id="word-list" data-role="listview" data-inset="true">
-                <!--ul id="list" data-role="listview"　data-filter="true" data-filter-placeholder="単語-->
+                        <!--ul id="list" data-role="listview"　data-filter="true" data-filter-placeholder="単語-->
                         <!--    <li>ここに単語が追加されていく</li>   -->
                 </ul>
             </div>
         </div>
 
         <div data-id="common_footer" data-role="footer" data-position="fixed">  <!--  以降フッター  -->
-            
+
             <div data-role="navbar">
                 <ul>
                     <li><a data-role="button" href="#dict" data-icon="search" data-transition="none" data-direction="reverse">辞書</a></li>
@@ -436,6 +453,23 @@
             <div id="originalImage"></div>
         </div>
 
+        <div id="picture_menu" data-role="popup" data-overlay-theme="c">
+            <div data-role="header">
+                <h3>画像の変更</h3>
+            </div>
+            <p>関連画像が適切でないとき画像を変更させることができます。</p>
+            <div class="parent">
+                <div>
+                    <div id="title" style="font-size: 16pt">
+                    </div>
+                    <input type="file" id="files" name="file" />
+                    <!--button onclick="abortRead();">Cancel read</button-->
+                    <a id="cancel-btn" href="#" data-role="button" data-rel="back">キャンセル</a>
+                    <!--div id="progress_bar"><div class="percent">0%</div></div-->
+                </div>
+            </div>
+        </div>
+
         <div data-id="common_header" data-role="header" data-position="fixed">
             <a href="#dict" data-direction="reverse"> 戻る </a>
             <h1>語彙学習用教材作成システム</h1>
@@ -445,11 +479,11 @@
             <div class="parent">
                 <div>
                     <div id="title" style="font-size: 16pt">
-                    </div>
-                    <input type="file" id="files" name="file" />
-                    <button onclick="abortRead();">Cancel read</button>
-                    <!--div id="progress_bar"><div class="percent">0%</div></div-->
 
+                    </div>
+                    <div>
+                        <a href="#picture_menu" id="a" data-rel="popup" data-role="button" data-position-to="window" data-transition="pop" data-inline="true"><h7>画像の変更</h7></a>
+                    </div>
                 </div>
                 <div role="main" class="ui-content" id="searchedImage">
 
@@ -477,29 +511,5 @@
     </div>
 <!--                3.単語情報の画面            -->
     
-        <!--div id="delete_popup" data-role="popup" data-theme="a" data-overlay-theme="c">
-            <ul data-role="listview" data-inset="true" style="min-width:210px;" data-theme="d">
-                <li data-role="divider" data-theme="b">本当に削除しますか？
-                </li>
-                <li><a id="delete-btn" data-rel="back" href="#">全削除をする</a>
-                </li>
-                <li data-theme="a"><a data-rel="back" href="#">キャンセル</a>
-                </li>
-            </ul>
-        </div-->
-
-    <div data-role="page" id="dialog">
-        <div data-role="header" data-theme="b">
-           <h1>注意</h1>
-        </div>
-        <div data-role="content">
-            <p>単語帳の全要素を削除します。本当に削除しますか？</p>
-            <div class="parent">
-                <a id="delete-all-btn" href="#" data-role="button" data-theme="b" data-rel="back">確認</a>
-                <a href="#" data-role="button" data-rel="back">キャンセル</a>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
