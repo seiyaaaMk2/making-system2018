@@ -52,6 +52,30 @@
             padding: 2px;
         }
 
+        #progress_bar {
+            margin: 10px 0;
+            padding: 3px;
+            border: 1px solid #000;
+            font-size: 14px;
+            clear: both;
+            opacity: 0;
+            -moz-transition: opacity 1s linear;
+            -o-transition: opacity 1s linear;
+            -webkit-transition: opacity 1s linear;
+        }
+        #progress_bar.loading {
+            opacity: 1.0;
+        }
+        #progress_bar .percent {
+            background-color: #99ccff;
+            height: auto;
+            width: 0;
+        }
+
+        .pictarea{
+            width: 1000%;
+            height: 100%;
+        }
 
     </style>
 
@@ -128,7 +152,7 @@
             });
         });
 
-        $('.dict-elements').live('click', function(){   //辞書の項目をクリックした際の動作
+        $('.dict-elements').live('click', function(){   //辞書の項目をクリックした際の動作                                              
 
             var ID = $(this).attr('id');
             var x = document.getElementById(ID);
@@ -156,7 +180,7 @@
                 url: URL,
                 dataType: "jsonp",
                 jsonp: "callback",
-                jsonpCallback: "callbackForElements"
+                jsonpCallback: "callbackForElements"                    
             });
         }
 
@@ -168,7 +192,7 @@
                 if(currentItem["first"]&&currentItem["second"]){
                     var translatedlist = "<p class='sentences'>"+ Number(i+1) +"）" + currentItem.first + "</p><p class='sentences'>  " + currentItem.second + "</p><hr/>";
                     $($('<li>').html(translatedlist)).appendTo('#sentences');
-                }
+                }                       
 
             }
         }
@@ -196,9 +220,9 @@
             var ImageLink = json.items[0].link;                 //元画像のリンク
             var ThumbLink = json.items[0].image.thumbnailLink;  //サムネイル画像リンク
 
-            $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img src='" + ThumbLink + "' alt='RelatedImage' /></a>");
+            $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id='file_display_area' src='" + ThumbLink + "' alt='RelatedImage' /></a>");
             $('#originalImage').html("<img src='" + ImageLink + "' style='width:100%' alt='RelatedOriginalImage' />");
-        }
+        }           
 
         function refreshWordList(json) {            //リストの描画・再描画
                 $('#word-list').find("li").empty();
@@ -209,7 +233,7 @@
                     //画像をアップロードしているとi番目のkeyが狂うことを考慮する必要あり
 
                     temp = JSON.parse(localStorage.getItem(localStorage.key(i)));  //ローカルストレージからの格納
-                    $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2><p>' + temp.meanings + '</p></a><a href="#list_menu" id="' + Number(i+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
+                    $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2></a><a href="#list_menu" id="' + Number(i+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
                     $('#word-list').listview("refresh");
                 }
                 document.getElementById("counter").innerHTML = i;//「counter個登録中」って出てくる
@@ -228,6 +252,9 @@
                 refreshWordList();
             });
 
+
+
+
             $('#detail-btn').live('click', function(){   //ポップアップの詳細をクリックした際の動作
                 var ID = $(this).attr('id');
                 $('#sentences').find("li").empty();
@@ -241,6 +268,7 @@
                 localStorage.removeItem(localStorage.key(ID));
                 refreshWordList();
                 location.reload();
+
             });
 
             $("#delete-all-btn").click(function(){         //全削除ボタンをクリックした際の動作
@@ -254,9 +282,31 @@
 
         });
 
+        // Resize Base64 Image
+        //   img_base64_src: string "data:image/png;base64,xxxxxxxx"
+        function ImgB64Resize(imgB64_src, width, height, callback) {
+            // Image Type
+            var img_type = imgB64_src.substring(5, imgB64_src.indexOf(";"));
+            // Source Image
+            var img = new Image();
+            img.onload = function() {
+                // New Canvas
+                var canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                // Draw (Resize)
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                // Destination Image
+                var imgB64_dst = canvas.toDataURL(img_type);
+                callback(imgB64_dst);
+            };
+            img.src = imgB64_src;
+        }
+
         var reader = FileReader;
         var fileDisplayArea;
-//        var progress;
+        var progress;
 
 
         function errorHandler(evt) {
@@ -280,16 +330,16 @@
                 var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
                 // Increase the progress bar length.
                 if (percentLoaded < 100) {
-//                    progress.style.width = percentLoaded + '%';
-//                    progress.textContent = percentLoaded + '%';
+                    progress.style.width = percentLoaded + '%';
+                    progress.textContent = percentLoaded + '%';
                 }
             }
         }
 
         function handleFileSelect(evt) {
             // Reset progress indicator on new file selection.
-//            progress.style.width = '0%';
-//            progress.textContent = '0%';
+            progress.style.width = '0%';
+            progress.textContent = '0%';
 
             reader = new FileReader();
             reader.onerror = errorHandler;
@@ -303,8 +353,8 @@
             };
             reader.onload = function(e) {
                 // Ensure that the progress bar displays 100% at the end.
-//                progress.style.width = '100%';
-//                progress.textContent = '100%';
+                progress.style.width = '100%';
+                progress.textContent = '100%';
                 setTimeout("document.getElementById('progress_bar').className='';", 2000);
 
                 //Set file
@@ -312,7 +362,17 @@
                 window.localStorage.setItem("file",reader.result);
                 var img = new Image();
                 img.src = reader.result;
-                fileDisplayArea.appendChild(img);
+                //fileDisplayArea.appendChild(img);
+                ImgB64Resize(img.src, 100, 100, 
+                    function(img_b64) {
+                        // Destination Image
+
+                        $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id='file_display_area' src='" + img_b64 + "' alt='RelatedImage' /></a>");
+                        $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
+                    }
+                );
+            //document.ge
+
             }
 
             // Read in the image file as a binary string.
@@ -321,17 +381,26 @@
         }
 
         $(function(){
-            fileDisplayArea = document.getElementById('searchedImage');
-            ('#searchedImage').empty();
+            fileDisplayArea = document.getElementById('file_display_area');
+            //('#searchedImage').find("img").empty();
             //fileDisplayArea.empty();
-//            progress = document.querySelector('.percent');
+            
+            progress = document.querySelector('.percent');
             document.getElementById('files').addEventListener('change', handleFileSelect, false);
             var revisedFile = window.localStorage.getItem("file");
             var img = new Image();
             img.src = revisedFile;
 //            fileDisplayArea.appendChild(img);
-            fileDisplayArea.append('<img src="' + img.src + '" style="max-height: 100%; max-width: 100%;">');
 
+            ImgB64Resize(img.src, 100, 100, 
+                function(img_b64) {
+                    // Destination Image
+//                    document.getElementById("file_display_area").src = img_b64;
+                    $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id='file_display_area' src='" + img_b64 + "' alt='RelatedImage' /></a>");
+                    $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
+                }
+            );
+            //document.getElementById("file_display_area").src = img.src;
         });
 
 
@@ -462,10 +531,9 @@
                 <div>
                     <div id="title" style="font-size: 16pt">
                     </div>
+                    <div id="progress_bar" style="width: 210px"><div class="percent">0%</div></div>
                     <input type="file" id="files" name="file" />
-                    <!--button onclick="abortRead();">Cancel read</button-->
-                    <a id="cancel-btn" href="#" data-role="button" data-rel="back">キャンセル</a>
-                    <!--div id="progress_bar"><div class="percent">0%</div></div-->
+                    <a id="cancel-btn" href="#" data-role="button" data-rel="back" data-inline="true">キャンセル</a>
                 </div>
             </div>
         </div>
@@ -486,9 +554,13 @@
                     </div>
                 </div>
                 <div role="main" class="ui-content" id="searchedImage">
-
+                    <a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id="file_display_area" src='" + ThumbLink + "' alt='RelatedImage' /></a>
                 </div>
+                
             </div>
+
+                <div id="progress_bar" style="width: 210px"><div class="percent">0%</div></div>
+
             <p><hr />この単語を用いた例文：</p>
             <div role="main" class="ui-content" style="height:200px; width:310px; overflow:auto; background-color: #cfcfcf;">
                 <ul id="sentences" data-role="listview">
