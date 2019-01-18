@@ -226,17 +226,21 @@
 
         function refreshWordList(json) {            //リストの描画・再描画
                 $('#word-list').find("li").empty();
-                for (var i = 0; i < localStorage.length; i++) {
+                for (var i = 0, j = 0; i < localStorage.length; i++, j++) {
+
+                    while(isNaN(localStorage.key(i))){
+                        i++;    //keyが数値(単語のkey)であれば次の要素を見る
+                    }
 
                     var temp = new WordObject();   //ローカルストレージに読み込んだ単語を格納するオブジェクト
 
                     //画像をアップロードしているとi番目のkeyが狂うことを考慮する必要あり
 
                     temp = JSON.parse(localStorage.getItem(localStorage.key(i)));  //ローカルストレージからの格納
-                    $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2></a><a href="#list_menu" id="' + Number(i+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
+                    $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2></a><a href="#list_menu" id="' + Number(j+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
                     $('#word-list').listview("refresh");
                 }
-                document.getElementById("counter").innerHTML = i;//「counter個登録中」って出てくる
+                document.getElementById("counter").innerHTML = j;   //「counter個登録中」って出てくる
 
         }
 
@@ -371,8 +375,6 @@
                         $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
                     }
                 );
-            //document.ge
-
             }
 
             // Read in the image file as a binary string.
@@ -390,7 +392,6 @@
             var revisedFile = window.localStorage.getItem("file");
             var img = new Image();
             img.src = revisedFile;
-//            fileDisplayArea.appendChild(img);
 
             ImgB64Resize(img.src, 100, 100, 
                 function(img_b64) {
@@ -400,7 +401,6 @@
                     $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
                 }
             );
-            //document.getElementById("file_display_area").src = img.src;
         });
 
 
