@@ -152,17 +152,32 @@
             });
         });
 
-        $('.dict-elements').live('click', function(){   //辞書の項目をクリックした際の動作                                              
+        $('.dict-elements').live('click', function(){   //辞書の項目をクリックした際の動作                                    
 
             var ID = $(this).attr('id');
             var x = document.getElementById(ID);
-            wordSelecting.phrase = x.getAttribute("data-phrase");       
+            wordSelecting.phrase = x.getAttribute("data-phrase");
             wordSelecting.meanings = x.getAttribute("data-meanings");
 
             $('#sentences').find("li").empty();
             makeElements(wordSelecting);    //例文取得
 
-            //getPict(wordSelecting);         //画像取得
+            var revisedFile = localStorage.getItem(wordSelecting.word + "-" + wordSelecting.phrase);
+            if(revisedFile){
+                var img = new Image();
+                img.src = revisedFile;
+
+                ImgB64Resize(img.src, 100, 100, 
+                    function(img_b64) {
+                        // Destination Image
+                        $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id='file_display_area' src='" + img_b64 + "' alt='RelatedImage' /></a>");
+                        $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
+                    }
+                );
+            }else{
+                getPict(wordSelecting);         //画像取得
+            }
+
         });
 
         function makeElements(WordObjectX){
@@ -180,12 +195,12 @@
                 url: URL,
                 dataType: "jsonp",
                 jsonp: "callback",
-                jsonpCallback: "callbackForElements"                    
+                jsonpCallback: "callbackForElements"
             });
         }
 
         function callbackForElements(json) {
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < 10; i++) {
 
                 var currentItem = json.examples[i];
 
@@ -249,8 +264,8 @@
             $("#add-btn").click(function(){
                 var time = $.now(); //登録した時間が単語オブジェクトのキーとなる
                 localStorage.setItem(time, JSON.stringify(wordSelecting));  //ローカルストレージへの読み込み
-                refreshWordList();
                 alert(localStorage.getItem(localStorage.key(localStorage.length)).word + "/" + localStorage.getItem(localStorage.key(localStorage.length)).phrase + "が登録されました");
+                refreshWordList();
             });
 
             $("#list_button").click(function(){         //単語帳ページに遷移したときの動作
@@ -259,25 +274,38 @@
 
             $('.listview_onClick').live('click', function(index){   //ポップアップをクリックした際の動作
                 wordIndex = $(this).attr('id');
-                alert(wordIndex + "番目の要素を選択中");
-                var temp = new WordObject();
-                temp = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ここはデバッグのためのコード-------------------------------------
-                alert(temp.word + temp.phrase + "を選択中");
+                alert(wordIndex + "個目の要素を選択中");
+                //var temp = new WordObject();
+                wordSelecting = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ここはデバッグのためのコード----------------------------------
+                alert(wordSelecting.word + wordSelecting.phrase + "を選択中");
             });
 
             $('#detail-btn').live('click', function(){   //ポップアップの詳細をクリックした際の動作
                 $('#sentences').find("li").empty();
-                var temp = new WordObject();
-                temp = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ローカルストレージからの格納
-                makeElements(temp);     //例文取得
-                getPict(temp);          //画像取得
+                wordSelecting = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ローカルストレージからの格納
+                makeElements(wordSelecting);     //例文取得
+
+                var revisedFile = localStorage.getItem(wordSelecting.word + "-" + wordSelecting.phrase);
+                if(revisedFile){
+                    var img = new Image();
+                    img.src = revisedFile;
+
+                    ImgB64Resize(img.src, 100, 100, 
+                        function(img_b64) {
+                            // Destination Image
+                            $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id='file_display_area' src='" + img_b64 + "' alt='RelatedImage' /></a>");
+                            $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
+                        }
+                    );
+                }else{
+                    getPict(wordSelecting);         //画像取得
+                }
             });
 
             $('#delete-btn').live('click', function(){   //ポップアップの削除をクリックした際の動作
                 localStorage.removeItem(localStorage.key(wordIndex));
                 refreshWordList();
                 location.reload();
-
             });
 
             $("#delete-all-btn").click(function(){         //全削除ボタンをクリックした際の動作
@@ -287,6 +315,10 @@
 
             $("#cancel-btn").click(function(){         //キャンセルボタンをクリックした際の動作
                 reader.abort();
+            });
+
+            $("#show-btn").click(function(){         //キャンセルボタンをクリックした際の動作
+                showLocalStorage();
             });
 
         });
@@ -367,8 +399,8 @@
                 setTimeout("document.getElementById('progress_bar').className='';", 2000);
 
                 //Set file
-
-                window.localStorage.setItem("file",reader.result);
+                var file_key = wordSelecting.word + "-" + wordSelecting.phrase
+                window.localStorage.setItem(file_key, reader.result);
                 var img = new Image();
                 img.src = reader.result;
                 //fileDisplayArea.appendChild(img);
@@ -388,25 +420,28 @@
 
         $(function(){
             fileDisplayArea = document.getElementById('file_display_area');
-            //('#searchedImage').find("img").empty();
-            //fileDisplayArea.empty();
             
             progress = document.querySelector('.percent');
             document.getElementById('files').addEventListener('change', handleFileSelect, false);
-            var revisedFile = window.localStorage.getItem("file");
+            var revisedFile = window.localStorage.getItem(wordSelecting.word + "-" + wordSelecting.phrase);
             var img = new Image();
             img.src = revisedFile;
 
             ImgB64Resize(img.src, 100, 100, 
                 function(img_b64) {
                     // Destination Image
-//                    document.getElementById("file_display_area").src = img_b64;
                     $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id='file_display_area' src='" + img_b64 + "' alt='RelatedImage' /></a>");
                     $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
                 }
             );
         });
 
+
+        function showLocalStorage() {
+            for (var i = 0; i < localStorage.length; i++) {
+                console.log("key="　+ localStorage.key(i) + ", Item=" + localStorage.getItem(localStorage.key(i)).word);
+            }
+       }
 
     </script>
 
@@ -503,6 +538,7 @@
                         <!--    <li>ここに単語が追加されていく</li>   -->
                 </ul>
             </div>
+            <a id="show-btn" href="#" data-role="button" data-theme="b">ローカルストレージ確認</a>
         </div>
 
         <div data-id="common_footer" data-role="footer" data-position="fixed">  <!--  以降フッター  -->
@@ -533,11 +569,11 @@
             <p>関連画像が適切でないとき画像を変更させることができます。</p>
             <div class="parent">
                 <div>
-                    <div id="title" style="font-size: 16pt">
-                    </div>
-                    <div id="progress_bar" style="width: 210px"><div class="percent">0%</div></div>
                     <input type="file" id="files" name="file" />
-                    <a id="cancel-btn" href="#" data-role="button" data-rel="back" data-inline="true">キャンセル</a>
+                    <div class="parent">
+                        <a id="cancel-btn" href="#" data-role="button" data-rel="back" data-inline="true">キャンセル</a>
+                        <div id="progress_bar" style="width: 200px"><div class="percent">0%</div></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -560,10 +596,7 @@
                 <div role="main" class="ui-content" id="searchedImage">
                     <a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id="file_display_area" src='" + ThumbLink + "' alt='RelatedImage' /></a>
                 </div>
-                
             </div>
-
-                <div id="progress_bar" style="width: 210px"><div class="percent">0%</div></div>
 
             <p><hr />この単語を用いた例文：</p>
             <div role="main" class="ui-content" style="height:200px; width:310px; overflow:auto; background-color: #cfcfcf;">
