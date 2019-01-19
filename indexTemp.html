@@ -162,7 +162,7 @@
             $('#sentences').find("li").empty();
             makeElements(wordSelecting);    //例文取得
 
-            getPict(wordSelecting);         //画像取得
+            //getPict(wordSelecting);         //画像取得
         });
 
         function makeElements(WordObjectX){
@@ -225,11 +225,11 @@
         }           
 
         function refreshWordList(json) {            //リストの描画・再描画
-                $('#word-list').find("li").empty();
+                $('#word_list').find("li").empty();
                 for (var i = 0, j = 0; i < localStorage.length; i++, j++) {
 
                     while(isNaN(localStorage.key(i))){
-                        i++;    //keyが数値(単語のkey)であれば次の要素を見る
+                        i++;    //keyが数値(単語のkey)でなければ次の要素を見る
                     }
 
                     var temp = new WordObject();   //ローカルストレージに読み込んだ単語を格納するオブジェクト
@@ -237,12 +237,13 @@
                     //画像をアップロードしているとi番目のkeyが狂うことを考慮する必要あり
 
                     temp = JSON.parse(localStorage.getItem(localStorage.key(i)));  //ローカルストレージからの格納
-                    $('#word-list').append('<li><a href="#"><h2>' + temp.word + ' : ' + temp.phrase + '</h2></a><a href="#list_menu" id="' + Number(j+1) + '"" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
-                    $('#word-list').listview("refresh");
+                    $('#word_list').append('<li><a href="#"><h2>' + Number(j+1) + ' ) ' + temp.word + ' : ' + temp.phrase + '</h2></a><a id="' + j + '" href="#list_menu" data-rel="popup" data-position-to="window" data-transition="pop" class="listview_onClick"></a></li>');
+                    $('#word_list').listview('refresh');
                 }
                 document.getElementById("counter").innerHTML = j;   //「counter個登録中」って出てくる
-
         }
+
+        var wordIndex;
 
         $(function(){
             $("#add-btn").click(function(){
@@ -256,20 +257,24 @@
                 refreshWordList();
             });
 
-
-
+            $('.listview_onClick').live('click', function(index){   //ポップアップをクリックした際の動作
+                wordIndex = $(this).attr('id');
+                alert(wordIndex + "番目の要素を選択中");
+                var temp = new WordObject();
+                temp = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ここはデバッグのためのコード-------------------------------------
+                alert(temp.word + temp.phrase + "を選択中");
+            });
 
             $('#detail-btn').live('click', function(){   //ポップアップの詳細をクリックした際の動作
-                var ID = $(this).attr('id');
                 $('#sentences').find("li").empty();
-                temp = JSON.parse(localStorage.getItem(localStorage.key(ID)));  //ローカルストレージからの格納
+                var temp = new WordObject();
+                temp = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ローカルストレージからの格納
                 makeElements(temp);     //例文取得
                 getPict(temp);          //画像取得
             });
 
             $('#delete-btn').live('click', function(){   //ポップアップの削除をクリックした際の動作
-                var ID = $(this).attr('id');
-                localStorage.removeItem(localStorage.key(ID));
+                localStorage.removeItem(localStorage.key(wordIndex));
                 refreshWordList();
                 location.reload();
 
@@ -370,7 +375,6 @@
                 ImgB64Resize(img.src, 100, 100, 
                     function(img_b64) {
                         // Destination Image
-
                         $('#searchedImage').html("<a href='#picture_popup' data-rel='popup' data-transition='pop' data-position-to='window'><img id='file_display_area' src='" + img_b64 + "' alt='RelatedImage' /></a>");
                         $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
                     }
@@ -494,7 +498,7 @@
             </div>
             <div>
 
-                <ul id="word-list" data-role="listview" data-inset="true">
+                <ul id="word_list" data-role="listview" data-inset="true">
                         <!--ul id="list" data-role="listview"　data-filter="true" data-filter-placeholder="単語-->
                         <!--    <li>ここに単語が追加されていく</li>   -->
                 </ul>
