@@ -81,7 +81,7 @@
 
     <script>
 
-        var WordObject = function(word, phrase, meanings){  //現在見ている単語を格納するオブジェクト{
+        var WordObject = function(word, phrase, meanings){  //単語を格納するオブジェクト{
             this.word = word;                               //  ユーザが検索した語句
             this.phrase = phrase;                           //  検索した中でユーザが選択した意味を持つ語句
             this.meanings = meanings;                       //  訳・もしくは再翻訳 }
@@ -116,7 +116,7 @@
         function callbackForDict(json) {
             var max = Object.keys(json.tuc).length;
             //if(max<0)max=0;
-            if(max>10)max=10;
+            if(max>10)max=5;
 
             var dictlist = "<ol data-role='listview'>";
             for (var i = 0; i < max; i++) {
@@ -152,7 +152,7 @@
             });
         });
 
-        $('.dict-elements').live('click', function(){   //辞書の項目をクリックした際の動作                                    
+        $('.dict-elements').live('click', function(){   //辞書の項目をクリックした際の動作                            
 
             var ID = $(this).attr('id');
             var x = document.getElementById(ID);
@@ -160,7 +160,7 @@
             wordSelecting.meanings = x.getAttribute("data-meanings");
 
             $('#sentences').find("li").empty();
-            makeElements(wordSelecting);    //例文取得
+            makeSentences(wordSelecting);    //例文取得
 
             var revisedFile = localStorage.getItem(wordSelecting.word + "-" + wordSelecting.phrase);
             if(revisedFile){
@@ -180,7 +180,7 @@
 
         });
 
-        function makeElements(WordObjectX){
+        function makeSentences(WordObjectX){
             $('#title').html(WordObjectX.word + " / " + WordObjectX.phrase);    //単語名など
 
             var BaseURL = "https://glosbe.com/gapi/tm?from=ja&dest=eng&format=json&phrase="; //和英のURL(英和の時は日本語で単語を見つけるため)
@@ -195,11 +195,11 @@
                 url: URL,
                 dataType: "jsonp",
                 jsonp: "callback",
-                jsonpCallback: "callbackForElements"
+                jsonpCallback: "callbackForSentences"
             });
         }
 
-        function callbackForElements(json) {
+        function callbackForSentences(json) {
             for (var i = 0; i < 10; i++) {
 
                 var currentItem = json.examples[i];
@@ -241,7 +241,8 @@
 
         function refreshWordList(json) {            //リストの描画・再描画
                 $('#word_list').find("li").empty();
-                for (var i = 0, j = 0; i < localStorage.length; i++, j++) {
+                var j = 0;
+                for (var i = 0; i < localStorage.length; i++, j++) {
 
                     while(isNaN(localStorage.key(i))){
                         i++;    //keyが数値(単語のkey)でなければ次の要素を見る
@@ -256,6 +257,7 @@
                     $('#word_list').listview('refresh');
                 }
                 document.getElementById("counter").innerHTML = j;   //「counter個登録中」って出てくる
+                $('#counter').html(j);
         }
 
         var wordIndex;
@@ -274,8 +276,9 @@
 
             $('.listview_onClick').live('click', function(index){   //ポップアップをクリックした際の動作
                 wordIndex = $(this).attr('id');
-                alert(wordIndex + "個目の要素を選択中");
-                //var temp = new WordObject();
+                //alert(wordIndex + "個目の要素を選択中");
+                //var temp = new WordObj
+                ect();
                 wordSelecting = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ここはデバッグのためのコード----------------------------------
                 alert(wordSelecting.word + wordSelecting.phrase + "を選択中");
             });
@@ -283,7 +286,7 @@
             $('#detail-btn').live('click', function(){   //ポップアップの詳細をクリックした際の動作
                 $('#sentences').find("li").empty();
                 wordSelecting = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ローカルストレージからの格納
-                makeElements(wordSelecting);     //例文取得
+                makeSentences(wordSelecting);     //例文取得
 
                 var revisedFile = localStorage.getItem(wordSelecting.word + "-" + wordSelecting.phrase);
                 if(revisedFile){
@@ -305,7 +308,6 @@
             $('#delete-btn').live('click', function(){   //ポップアップの削除をクリックした際の動作
                 localStorage.removeItem(localStorage.key(wordIndex));
                 refreshWordList();
-                location.reload();
             });
 
             $("#delete-all-btn").click(function(){         //全削除ボタンをクリックした際の動作
@@ -434,6 +436,8 @@
                     $('#originalImage').html("<img src='" + img.src + "' style='width:100%' alt='RelatedOriginalImage' />");
                 }
             );
+
+            refreshWordList();
         });
 
 
@@ -538,7 +542,7 @@
                         <!--    <li>ここに単語が追加されていく</li>   -->
                 </ul>
             </div>
-            <a id="show-btn" href="#" data-role="button" data-theme="b">ローカルストレージ確認</a>
+            <!--a id="show-btn" href="#" data-role="button" data-theme="b">ローカルストレージ確認</a-->
         </div>
 
         <div data-id="common_footer" data-role="footer" data-position="fixed">  <!--  以降フッター  -->
