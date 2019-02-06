@@ -277,10 +277,9 @@
             $('.listview_onClick').live('click', function(index){   //ポップアップをクリックした際の動作
                 wordIndex = $(this).attr('id');
                 //alert(wordIndex + "個目の要素を選択中");
-                //var temp = new WordObj
-                ect();
+                //var temp = new WordObject();
                 wordSelecting = JSON.parse(localStorage.getItem(localStorage.key(wordIndex)));  //ここはデバッグのためのコード----------------------------------
-                alert(wordSelecting.word + wordSelecting.phrase + "を選択中");
+                //alert(wordSelecting.word + wordSelecting.phrase + "を選択中");
             });
 
             $('#detail-btn').live('click', function(){   //ポップアップの詳細をクリックした際の動作
@@ -537,7 +536,7 @@
             </div>
             <div>
 
-                <ul id="word_list" data-role="listview" data-inset="true">
+                <ul id="word_list" data-role="listview" data-inset="true" style="overflow:auto;">
                         <!--ul id="list" data-role="listview"　data-filter="true" data-filter-placeholder="単語-->
                         <!--    <li>ここに単語が追加されていく</li>   -->
                 </ul>
